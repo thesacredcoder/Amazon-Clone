@@ -5,6 +5,7 @@ import Header from "./components/Header";
 import Home from "./components/Home";
 import Checkout from "./components/Checkout";
 import LoginPage from "./components/LoginPage";
+import Payment from "./components/Payment";
 import { useEffect } from "react";
 import { auth } from "./firebase";
 import { useStateValue } from "./store/StateProvider";
@@ -40,6 +41,10 @@ function App() {
           <Route path="/checkout">
             <Header />
             <Checkout />
+          </Route>
+          <Route path="/payment">
+            <Header />
+            <Payment />
           </Route>
           <Route path="/">
             <Header />
