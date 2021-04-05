@@ -8,16 +8,18 @@ import { useStateValue } from "../store/StateProvider";
 import CheckoutProduct from "./CheckoutProduct";
 import "./Payment.css";
 
+import { db } from "../firebase";
+
 function Payment(props) {
   const history = useHistory();
 
-  const [{ basket, user }] = useStateValue();
+  const [{ basket, user }, dispatch] = useStateValue();
   const [error, setError] = useState(null);
   const [disabled, setDisabled] = useState(true);
 
   const [succeeded, setSucceeded] = useState(false);
   const [processing, setProcessing] = useState("");
-  const [clientSecret, setClientSecret] = useState(true);
+  const [clientSecret, setClientSecret] = useState();
 
   const stripe = useStripe();
   const elements = useElements();
@@ -31,10 +33,12 @@ function Payment(props) {
   const getClientSecret = async () => {
     const response = await axios({
       method: "post",
-      url: `/payment/create?total=${getBasketTotal(basket) * 100}`,
+      url: `/payments/create?total=${getBasketTotal(basket) * 100}`,
     });
     setClientSecret(response.data.clientSecret);
   };
+
+  console.log(clientSecret);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -48,9 +52,25 @@ function Payment(props) {
       })
       .then(({ paymentIntent }) => {
         // paymentIntent = payment confirmation
+        console.log(paymentIntent);
+
+        db.collection("users")
+          .doc(user?.uid)
+          .collection("orders")
+          .doc(paymentIntent.id)
+          .set({
+            basket: basket,
+            amount: paymentIntent.amount,
+            created: paymentIntent.created,
+          });
+
         setSucceeded(true);
-        setError(false);
+        setError(null);
         setProcessing(false);
+
+        dispatch({
+          type: "EMPTY_BASKET",
+        });
 
         history.replace("/orders");
       });
@@ -67,7 +87,7 @@ function Payment(props) {
     <div className="payment">
       <div className="payment__container">
         <h1>
-          Checkout (<Link to={"/checkout"}>{basket?.length} items</Link>)
+          Checkout (<Link to="/checkout">{basket?.length} items</Link>)
         </h1>
 
         <div className="payment__section">
@@ -115,7 +135,7 @@ function Payment(props) {
                   decimalScale={2}
                   value={getBasketTotal(basket)}
                   displayType={"text"}
-                  ThousandSeparator={true}
+                  thousandSeparator={true}
                   prefix={"$"}
                 />
                 <button disabled={processing || disabled || succeeded}>

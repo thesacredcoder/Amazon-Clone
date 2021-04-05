@@ -26,7 +26,7 @@ function Subtotal(props) {
         value={getBasketTotal(basket)}
         // value={0}
         displayType={"text"}
-        ThousandSeparator={true}
+        thousandSeparator={true}
         prefix={"$"}
       />
 
